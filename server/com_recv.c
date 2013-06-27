@@ -5,7 +5,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <dirent.h>
 
 #include "ftp_shell.h"
@@ -15,16 +17,15 @@ void ls_recv(int ctlfd, CTL *ctl)
 {
 	DIR *dir_ptr;
 	struct dirent *dir_ent;
-	char buf[100];
+	char buf[1000];
 	int i = 0;
+	
+	memset(buf, 0, 1000);
 
 	dir_ptr = opendir("./ftp");
 
 	while ((dir_ent = readdir(dir_ptr)) != NULL)	
 	{
-	//	send(ctlfd, dir_ent->d_name, \
-	//				strlen(dir_ent->d_name), 0);
-
 		strcpy(&buf[i], dir_ent->d_name);
 		i += strlen(dir_ent->d_name);
 		buf[i] = '\t';
@@ -78,11 +79,25 @@ void push_recv(int ctlfd, CTL *ctl)
 	}
 
 	memset(recvbuf, 0, 100);
+	int fd;
+	char path[20];
+
+	strcpy(path, "./ftp/");
+	strcpy(&path[6], ctl->file);
+
+	fd = open(path, O_CREAT|O_RDWR, 0644);
 	
-	recv(dataClient, recvbuf, 100, 0);
+	int tmp = 0;
 
-	printf("%s\n", recvbuf);
+	while ((tmp = recv(dataClient, recvbuf, 80, 0)) >= 80)
+	{
+		write(fd, recvbuf, tmp);
+		memset(recvbuf, 0, 100);
+	}
 
+	write(fd, recvbuf, tmp);
+
+	close(fd);
 	close(datafd);
 	close(dataClient);
 
@@ -90,6 +105,28 @@ void push_recv(int ctlfd, CTL *ctl)
 
 void pull_recv(int ctlfd, CTL *ctl)
 {
+	char sendbuf[100];
+	
+	memset(sendbuf, 0, 100);
+	
+	int fd;
+	char path[20];
 
-	send(ctlfd, "you tell me pull", 16, 0);
+	strcpy(path, "./ftp/");
+	strcpy(&path[6], ctl->file);
+
+
+	fd = open(path, O_RDONLY);
+
+	int tmp = 0;
+
+	while ((tmp = read(fd, sendbuf, 80)) >= 80)
+	{
+		send(ctlfd, sendbuf, tmp, 0);
+		memset(sendbuf, 0, 80);
+	}
+
+	send(ctlfd, sendbuf, tmp, 0);
+
+	close(fd);
 }

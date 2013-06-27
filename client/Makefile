@@ -2,6 +2,7 @@ object = com_send.o login.o ftp_shell.o client.o
 
 ftp: $(object)
 	gcc -o $@ $(object)
+	cp ftp ./test
 
 ftp_shell.o: ftp_shell.c
 	gcc -g -c -o $@ $<
