@@ -6,13 +6,14 @@
 #include <string.h>
 
 #include "ftp.h"
+#include "ftp_shell.h"
 
 main()
 {
 	int Sctlfd, ctlfd;
 	struct sockaddr_in addr;
 	int sin_size = sizeof (struct sockaddr_in);
-	char buf[10] = {0};
+	char buf[20] = {0};
 	int value = 1;
 
 	memset (&addr, 0, sizeof(addr));
@@ -49,13 +50,36 @@ main()
 		exit(1);
 	}
 
-	recv(ctlfd, buf, 10, 0);
+	recv(ctlfd, buf, 20, 0);
 	
 	sleep(2);
 	
 	send(ctlfd, "confirmed ok", 12, 0);
 	
-	printf("%s\n", buf);	
-  
+	printf("%s connected.\n", buf);	
+ 
+	while (1)
+	{
+		CTL ctl;
 
+		memset(&ctl, 0, sizeof(CTL));
+
+		recv (ctlfd, (void *)&ctl, sizeof(CTL), 0);
+
+		if (ctl.comflag == LS)
+		{
+			ls_recv(ctlfd, &ctl);
+			continue;
+		}
+		else if (ctl.comflag == PUSH)
+		{
+			push_recv(ctlfd, &ctl);
+			continue;
+		}
+		else if (ctl.comflag == PULL)
+		{
+			pull_recv(ctlfd, &ctl);
+			continue;
+		}
+	}
 }

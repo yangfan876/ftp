@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <stdlib.h>
@@ -27,7 +28,7 @@ int login(const char *user, const char *target)
 	}
 	else if (tmp == -1)
 	{
-		return -1;
+		return 0;
 	}
 
 	if ((ctlfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -50,5 +51,6 @@ int login(const char *user, const char *target)
 
 	recv(ctlfd, confirm_buf, 12, 0);
 	confirm_buf[12] = 0;
-	printf("%s\n", confirm_buf);
+	printf("login success.\n");
+	ftp_shell(ctlfd, &addr);
 }

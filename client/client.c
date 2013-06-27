@@ -1,22 +1,33 @@
 #include <stdio.h>
-
-#include <unistd.h>
+#include <stdlib.h>
 
 
 void welcome(void);
 
 
-main(int argc, char **argv)
+void main(int argc, char **argv)
 {
 	welcome();
 
 	if (argc > 1)
 	{
-		login(argv[1], argv[2]);
+		int try = 3;
+		while (try--)
+		{
+			if (!login(argv[1], argv[2]))
+			{
+				printf("login failed.\n");
+				exit(1);
+			}		
+		}
+
+		printf("Permission denied\n");
+		exit(1);
 	}
 	else
 	{
-//		ftp_shell();
+		ftp_shell(-1, (struct sockaddr_in *)NULL);
+		exit(1);
 	}
 }
 
